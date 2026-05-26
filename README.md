@@ -1,0 +1,3 @@
+# Obsidian Synchronizer Plugin
+
+TODO
