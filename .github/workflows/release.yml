@@ -1,15 +1,12 @@
-name: Build & Release Obsidian Plugin
+name: Release Obsidian Plugin
 
 on:
   push:
     tags:
       - "*"
 
-permissions:
-  contents: write
-
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,16 +14,25 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - run: npm install
       - run: npm run build
 
-      - name: Create Release
+      - name: Create zip
+        run: |
+          mkdir release
+          cp main.js manifest.json release/
+          cp styles.css release/ || true
+
+          cd release
+          zip -r ../plugin.zip .
+
+      - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             main.js
             manifest.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            styles.css
+            plugin.zip
