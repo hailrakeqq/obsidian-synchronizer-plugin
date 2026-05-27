@@ -58,7 +58,7 @@ export default class ObsidianSynchronizerPlugin extends Plugin {
 		});
 
 		this.addRibbonIcon('down-arrow-with-tail', 'Download', async (evt: MouseEvent) => {			
-			await this.download
+			await this.download()
 		});
 
 		this.addCommand({
@@ -66,7 +66,7 @@ export default class ObsidianSynchronizerPlugin extends Plugin {
     		name: "Upload",
     		icon: "refresh-cw",
     		callback: async () => {
-    		    await this.upload
+    		    await this.upload()
     		}
 		});
 
@@ -75,7 +75,7 @@ export default class ObsidianSynchronizerPlugin extends Plugin {
     		name: "Download",
     		icon: "refresh-cw",
     		callback: async () => {
-    		    await this.download
+    		    await this.download()
     		}
 		});
 
