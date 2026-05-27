@@ -5,6 +5,9 @@ on:
     tags:
       - "*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +26,6 @@ jobs:
         run: |
           mkdir release
           cp main.js manifest.json release/
-          cp styles.css release/ || true
 
           cd release
           zip -r ../plugin.zip .
