@@ -1,4 +1,45 @@
-name: Release Obsidian Plugin
+# name: Release Obsidian Plugin
+
+# on:
+#   push:
+#     tags:
+#       - "*"
+
+# permissions:
+#   contents: write
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - uses: actions/setup-node@v4
+#         with:
+#           node-version: 20
+
+#       - run: npm install
+#       - run: npm run build
+
+#       - name: Create zip
+#         run: |
+#           mkdir release
+#           cp main.js manifest.json release/
+
+#           cd release
+#           zip -r ../plugin.zip .
+
+#       - name: Release
+#         uses: softprops/action-gh-release@v2
+#         with:
+#           files: |
+#             main.js
+#             manifest.json
+#             styles.css
+#             plugin.zip
+
+name: Release Obsidian plugin
 
 on:
   push:
@@ -11,30 +52,28 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: "20"
 
-      - run: npm install
-      - run: npm run build
-
-      - name: Create zip
+      - name: Build plugin
         run: |
-          mkdir release
-          cp main.js manifest.json release/
+          npm install
+          npm run build
 
-          cd release
-          zip -r ../plugin.zip .
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            main.js
-            manifest.json
-            styles.css
-            plugin.zip
+          gh release create "$tag" \
+            --title="$tag" \
+            --draft \
+            main.js manifest.json styles.css
