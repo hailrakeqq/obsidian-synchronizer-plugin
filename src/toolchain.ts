@@ -95,7 +95,7 @@ export class Toolchain {
         formData.append("metadata", JSON.stringify(metadata));
        
         const request = await fetch(
-            `http://${serverPath}/upload`,
+            `${serverPath}/upload`,
             {
                 headers: {
     			    Authorization: `Bearer ${API_TOKEN}`
@@ -109,7 +109,7 @@ export class Toolchain {
 
     static async getAvailableBackupsFromServer(serverPath: string, vaultName: string,  API_TOKEN: string){
         const response = await fetch(
-            `http://${serverPath}/vaults-lists?vaultname=${vaultName}`,
+            `${serverPath}/vaults-lists?vaultname=${vaultName}`,
             { 
                 headers: {
     			    Authorization: `Bearer ${API_TOKEN}`
@@ -133,7 +133,7 @@ export class Toolchain {
        
         formData.append("metadata", JSON.stringify(metadata));
         
-        const request = await fetch(`http://${serverPath}/download`, {
+        const request = await fetch(`${serverPath}/download`, {
             headers: {
     			Authorization: `Bearer ${API_TOKEN}`
     		},
