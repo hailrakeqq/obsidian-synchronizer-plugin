@@ -50,29 +50,33 @@ export class Toolchain {
   
     static unzipAchive(zipArchivePath: string, targetDir: string) {
         console.log("Unarchive zip from server");
-        
-        const zip = new AdmZip(zipArchivePath);
-        const entries = zip.getEntries()
 
-        for(const entry of entries){
+        const zip = new AdmZip(zipArchivePath);
+        const entries = zip.getEntries();
+
+        for (const entry of entries) {
             const entryName = entry.entryName;
 
-            if (entryName.startsWith(".obsidian"))
-                continue
+            if (entryName.startsWith(".obsidian")) continue;
 
             const outputPath = path.join(targetDir, entryName);
+
+            if (entry.isDirectory) {
+                fs.mkdirSync(outputPath, { recursive: true });
+                continue;
+            }
 
             // create dirs
             fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
             // write file
             fs.writeFileSync(outputPath, entry.getData());
-
-            fs.rmSync(path.join(os.tmpdir(), "obsidian-synchronizer-from-server"), {
-                recursive: true,
-                force: true
-            });
         }
+
+        fs.rmSync(path.join(os.tmpdir(), "obsidian-synchronizer-from-server"), {
+            recursive: true,
+            force: true
+        });
     }
 
     static async uploadToServer(serverPath: string, zipPath: string, vaultName: string, API_TOKEN: string) { 
