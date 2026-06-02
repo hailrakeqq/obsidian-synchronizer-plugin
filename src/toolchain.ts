@@ -47,37 +47,107 @@ export class Toolchain {
 
         fs.writeFileSync(outPath, content);
     }
-  
-    static unzipAchive(zipArchivePath: string, targetDir: string) {
-        console.log("Unarchive zip from server");
+	
+  	private static sanitizePathPart(name: string): string {
+	    const reserved = new Set([
+	        "CON", "PRN", "AUX", "NUL",
+	        "COM1", "COM2", "COM3", "COM4", "COM5",
+	        "COM6", "COM7", "COM8", "COM9",
+	        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
+	        "LPT6", "LPT7", "LPT8", "LPT9"
+	    ]);
+	
+	    let result = name
+	        .replace(/[<>:"/\\|?*]/g, "_")
+	        .replace(/[. ]+$/g, "_");
+	
+	    if (reserved.has(result.toUpperCase()))
+	        result = "_" + result;
+	
+	    return result;
+	}
 
-        const zip = new AdmZip(zipArchivePath);
-        const entries = zip.getEntries();
+	static unzipAchive(zipArchivePath: string, targetDir: string) {
+	    console.log("Unarchive zip from server");
+	
+	    const zip = new AdmZip(zipArchivePath);
+	    const entries = zip.getEntries();
+	
+	    for (const entry of entries) {
+	        const entryName = entry.entryName;
+	
+	        if (entryName.startsWith(".obsidian"))
+	            continue;
+	
+	        const sanitizedEntryName = entryName
+	            .split(/[\\/]/)
+	            .map(part => this.sanitizePathPart(part))
+	            .join(path.sep);
+	
+	        const outputPath = path.join(
+	            targetDir,
+	            sanitizedEntryName
+	        );
+	
+	        if (entry.isDirectory) {
+	            fs.mkdirSync(outputPath, {
+	                recursive: true
+	            });
+	            continue;
+	        }
+	
+	        fs.mkdirSync(
+	            path.dirname(outputPath),
+	            { recursive: true }
+	        );
+	
+	        fs.writeFileSync(
+	            outputPath,
+	            entry.getData()
+	        );
+	    }
+	
+	    fs.rmSync(
+	        path.join(
+	            os.tmpdir(),
+	            "obsidian-synchronizer-from-server"
+	        ),
+	        {
+	            recursive: true,
+	            force: true
+	        }
+	    );
+	}
+    // static unzipAchive(zipArchivePath: string, targetDir: string) {
+    //     console.log("Unarchive zip from server");
 
-        for (const entry of entries) {
-            const entryName = entry.entryName;
+    //     const zip = new AdmZip(zipArchivePath);
+    //     const entries = zip.getEntries();
 
-            if (entryName.startsWith(".obsidian")) continue;
+    //     for (const entry of entries) {
+    //         const entryName = entry.entryName;
 
-            const outputPath = path.join(targetDir, entryName);
+    //         if (entryName.startsWith(".obsidian")) continue;
 
-            if (entry.isDirectory) {
-                fs.mkdirSync(outputPath, { recursive: true });
-                continue;
-            }
+    //         const outputPath = path.join(targetDir, entryName);
 
-            // create dirs
-            fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    //         if (entry.isDirectory) {
+    //             fs.mkdirSync(outputPath, { recursive: true });
+    //             continue;
+    //         }
 
-            // write file
-            fs.writeFileSync(outputPath, entry.getData());
-        }
+    //         // create dirs
+    //         fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-        fs.rmSync(path.join(os.tmpdir(), "obsidian-synchronizer-from-server"), {
-            recursive: true,
-            force: true
-        });
-    }
+    //         // write file
+    //         fs.writeFileSync(outputPath, entry.getData());
+    //     }
+
+    //     fs.rmSync(path.join(os.tmpdir(), "obsidian-synchronizer-from-server"), {
+    //         recursive: true,
+    //         force: true
+    //     });
+    // }
 
     static async uploadToServer(serverPath: string, zipPath: string, vaultName: string, API_TOKEN: string) { 
         const zipBuffer = fs.readFileSync(zipPath);
