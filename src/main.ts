@@ -9,44 +9,137 @@ import { DownloadModal } from "./download_modal";
 export default class ObsidianSynchronizerPlugin extends Plugin {
 	settings!: ObsidianSynchronizerPluginSettings;
 	
-	async upload(){
-		new Notice('Upload to server!' + ' Server IP: ' + this.settings.serverIP);
-		const adapter = this.app.vault.adapter;
+	// async upload(){
+	// 	new Notice('Upload to server!' + ' Server IP: ' + this.settings.serverIP);
+	// 	const adapter = this.app.vault.adapter;
 		
-		if (adapter instanceof FileSystemAdapter) {
-			const vaultPath = adapter.getBasePath();
-			const vaultPathArray = vaultPath.split('/')
-			const vaultName = vaultPathArray[vaultPathArray.length - 1]
-			const tmpDir = path.join(os.tmpdir(), "obsidian-synchronizer");
-			const zipPath = path.join(tmpDir, "vault-latest.zip");
-			if (!fs.existsSync(tmpDir)) 
-    			fs.mkdirSync(tmpDir, { recursive: true });
+	// 	if (adapter instanceof FileSystemAdapter) {
+	// 		const vaultPath = adapter.getBasePath();
+	// 		const vaultPathArray = vaultPath.split('/')
+	// 		const vaultName = vaultPathArray[vaultPathArray.length - 1]
+	// 		const tmpDir = path.join(os.tmpdir(), "obsidian-synchronizer");
+	// 		const zipPath = path.join(tmpDir, "vault-latest.zip");
+	// 		if (!fs.existsSync(tmpDir)) 
+    // 			fs.mkdirSync(tmpDir, { recursive: true });
 			
-			await Toolchain.createZipArchive(vaultPath, zipPath)
-			const uploadResult = await Toolchain.uploadToServer(this.settings.serverIP, zipPath, vaultName as any, this.settings.API_TOKEN)
+	// 		await Toolchain.createZipArchive(vaultPath, zipPath)
+	// 		const uploadResult = await Toolchain.uploadToServer(this.settings.serverIP, zipPath, vaultName as any, this.settings.API_TOKEN)
 
-			if(uploadResult == 200) {
-				fs.rmdirSync(tmpDir, {recursive: true})
-				new Notice('Archive have been successfully uploaded to server. ' + this.settings.serverIP);
-			}
-		}
+	// 		if(uploadResult == 200) {
+	// 			fs.rmdirSync(tmpDir, {recursive: true})
+	// 			new Notice('Archive have been successfully uploaded to server. ' + this.settings.serverIP);
+	// 		}
+	// 	}
+	// }
+
+	// async download(){
+	// 	const adapter = this.app.vault.adapter;
+	// 	if (adapter instanceof FileSystemAdapter) {
+	// 		const vaultPath = adapter.getBasePath();
+	// 		const vaultPathArray = vaultPath.split('/')
+	// 		const vaultName = vaultPathArray[vaultPathArray.length - 1] || "test_vault"
+	// 		const tmpDir = path.join(os.tmpdir(), "obsidian-synchronizer-from-server");
+	// 		const backupNames = await Toolchain.getAvailableBackupsFromServer(this.settings.serverIP, vaultName, this.settings.API_TOKEN)
+			
+	// 		if (!fs.existsSync(tmpDir)) 
+	// 			fs.mkdirSync(tmpDir, { recursive: true });
+
+	// 	    new DownloadModal(this.app, backupNames, this.settings.serverIP, vaultName, vaultPath, tmpDir, this.settings.API_TOKEN).open();
+	// 		new Notice('Archive have been successfully downloaded and unzip');
+	// 	}
+	// }
+
+	async upload() {
+    	new Notice(
+    	    'Upload to server! Server IP: ' + this.settings.serverIP
+    	);
+
+    	const adapter = this.app.vault.adapter;
+
+    	if (adapter instanceof FileSystemAdapter) {
+    	    const vaultPath = adapter.getBasePath();
+    	    const vaultName = path.basename(vaultPath);
+
+    	    const tmpDir = path.join(
+    	        os.tmpdir(),
+    	        "obsidian-synchronizer"
+    	    );
+
+    	    const zipPath = path.join(
+    	        tmpDir,
+    	        "vault-latest.zip"
+    	    );
+
+    	    if (!fs.existsSync(tmpDir)) {
+    	        fs.mkdirSync(tmpDir, { recursive: true });
+    	    }
+
+    	    await Toolchain.createZipArchive(
+    	        vaultPath,
+    	        zipPath
+    	    );
+
+    	    const uploadResult =
+    	        await Toolchain.uploadToServer(
+    	            this.settings.serverIP,
+    	            zipPath,
+    	            vaultName,
+    	            this.settings.API_TOKEN
+    	        );
+
+    	    if (uploadResult === 200) {
+    	        fs.rmSync(tmpDir, {
+    	            recursive: true,
+    	            force: true
+    	        });
+
+    	        new Notice(
+    	            'Archive successfully uploaded to server: ' +
+    	            this.settings.serverIP
+    	        );
+    	    }
+    	}
 	}
 
-	async download(){
-		const adapter = this.app.vault.adapter;
-		if (adapter instanceof FileSystemAdapter) {
-			const vaultPath = adapter.getBasePath();
-			const vaultPathArray = vaultPath.split('/')
-			const vaultName = vaultPathArray[vaultPathArray.length - 1] || "test_vault"
-			const tmpDir = path.join(os.tmpdir(), "obsidian-synchronizer-from-server");
-			const backupNames = await Toolchain.getAvailableBackupsFromServer(this.settings.serverIP, vaultName, this.settings.API_TOKEN)
-			
-			if (!fs.existsSync(tmpDir)) 
-				fs.mkdirSync(tmpDir, { recursive: true });
+	async download() {
+    	const adapter = this.app.vault.adapter;
 
-		    new DownloadModal(this.app, backupNames, this.settings.serverIP, vaultName, vaultPath, tmpDir, this.settings.API_TOKEN).open();
-			new Notice('Archive have been successfully downloaded and unzip');
-		}
+    	if (adapter instanceof FileSystemAdapter) {
+    	    const vaultPath = adapter.getBasePath();
+    	    const vaultName = path.basename(vaultPath) || "test_vault";
+
+    	    const tmpDir = path.join(
+    	        os.tmpdir(),
+    	        "obsidian-synchronizer-from-server"
+    	    );
+
+    	    const backupNames =
+    	        await Toolchain.getAvailableBackupsFromServer(
+    	            this.settings.serverIP,
+    	            vaultName,
+    	            this.settings.API_TOKEN
+    	        );
+
+    	    if (!fs.existsSync(tmpDir)) {
+    	        fs.mkdirSync(tmpDir, {
+    	            recursive: true
+    	        });
+    	    }
+
+    	    new DownloadModal(
+    	        this.app,
+    	        backupNames,
+    	        this.settings.serverIP,
+    	        vaultName,
+    	        vaultPath,
+    	        tmpDir,
+    	        this.settings.API_TOKEN
+    	    ).open();
+
+    	    new Notice(
+    	        'Archive have been successfully downloaded and unzip'
+    	    );
+    	}
 	}
 
 	async onload() {
